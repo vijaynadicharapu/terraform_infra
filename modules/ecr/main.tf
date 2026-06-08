@@ -1,0 +1,52 @@
+#################################################
+# ECR Repository
+#################################################
+
+resource "aws_ecr_repository" "this" {
+
+  name = "${var.project_name}-${var.environment}-${var.repository_name}"
+
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+#################################################
+# Lifecycle Policy
+#################################################
+
+resource "aws_ecr_lifecycle_policy" "this" {
+
+  repository = aws_ecr_repository.this.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+
+        description = "Keep only latest 10 images"
+
+        selection = {
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
+          countNumber = 10
+        }
+
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
