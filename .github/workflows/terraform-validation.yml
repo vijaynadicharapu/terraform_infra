@@ -1,93 +1,110 @@
 name: Terraform Manual Deployment
 
 on:
-  workflow_dispatch:
-    inputs:
-      terraform-version:
-        description: "Terraform Version"
-        required: true
-        default: "1.8.0"
+workflow_dispatch:
+inputs:
+terraform-version:
+description: "Terraform Version"
+required: true
+default: "1.8.0"
 
 permissions:
-  id-token: write
-  contents: read
-
-defaults:
-  run:
-    working-directory: terraform/terraform/environments/dev
+id-token: write
+contents: read
 
 jobs:
-  validate:
-    name: Validate
-    runs-on: ubuntu-latest
+validate:
+name: Validate
+runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+```
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ github.event.inputs.terraform-version }}
+  - name: Debug Repository Structure
+    run: |
+      pwd
+      echo "===== ROOT ====="
+      ls -la
+      echo "===== DIRECTORIES ====="
+      find . -type d | sort
 
-      - name: Terraform Init
-        run: terraform init -input=false
+  - name: Setup Terraform
+    uses: hashicorp/setup-terraform@v3
+    with:
+      terraform_version: ${{ github.event.inputs.terraform-version }}
 
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
+  - name: Terraform Init
+    working-directory: terraform/environments/dev
+    run: terraform init -input=false
 
-      - name: Terraform Validate
-        run: terraform validate
+  - name: Terraform Format Check
+    working-directory: terraform/environments/dev
+    run: terraform fmt -check -recursive
 
-  plan:
-    name: Plan
-    runs-on: ubuntu-latest
-    needs: validate
+  - name: Terraform Validate
+    working-directory: terraform/environments/dev
+    run: terraform validate
+```
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+plan:
+name: Plan
+runs-on: ubuntu-latest
+needs: validate
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ github.event.inputs.terraform-version }}
+```
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
 
-      - name: Terraform Init
-        run: terraform init -input=false
+  - name: Setup Terraform
+    uses: hashicorp/setup-terraform@v3
+    with:
+      terraform_version: ${{ github.event.inputs.terraform-version }}
 
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
+  - name: Terraform Init
+    working-directory: terraform/environments/dev
+    run: terraform init -input=false
 
-      - name: Upload Plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: tfplan
+  - name: Terraform Plan
+    working-directory: terraform/environments/dev
+    run: terraform plan -out=tfplan
 
-  apply:
-    name: Apply
-    runs-on: ubuntu-latest
-    needs: plan
-    environment: dev
+  - name: Upload Plan
+    uses: actions/upload-artifact@v4
+    with:
+      name: tfplan
+      path: terraform/environments/dev/tfplan
+```
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+apply:
+name: Apply
+runs-on: ubuntu-latest
+needs: plan
+environment: dev
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ github.event.inputs.terraform-version }}
+```
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
 
-      - name: Terraform Init
-        run: terraform init -input=false
+  - name: Setup Terraform
+    uses: hashicorp/setup-terraform@v3
+    with:
+      terraform_version: ${{ github.event.inputs.terraform-version }}
 
-      - name: Download Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-          path: .
+  - name: Terraform Init
+    working-directory: terraform/environments/dev
+    run: terraform init -input=false
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve ./tfplan
+  - name: Download Plan
+    uses: actions/download-artifact@v4
+    with:
+      name: tfplan
+      path: terraform/environments/dev
+
+  - name: Terraform Apply
+    working-directory: terraform/environments/dev
+    run: terraform apply -auto-approve tfplan
+```
