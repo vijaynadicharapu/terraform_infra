@@ -14,7 +14,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: terraform/environments/dev
+    working-directory: terraform/terraform/environments/dev
 
 jobs:
   validate:
