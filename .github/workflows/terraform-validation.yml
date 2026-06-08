@@ -7,10 +7,6 @@ on:
         description: "Terraform Version"
         required: true
         default: "1.8.0"
-      auto-apply:
-        description: "Automatically run terraform apply after plan (true/false)"
-        required: false
-        default: "false"
 
 permissions:
   id-token: write
@@ -23,6 +19,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Debug repository layout
+        run: |
+          pwd
+          ls -la
+          find . -maxdepth 3 -type d
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -65,10 +67,11 @@ jobs:
           path: environments/dev/tfplan.binary
 
   apply:
-    name: Apply (optional)
+    name: Apply (requires approval)
     runs-on: ubuntu-latest
     needs: validate-and-plan
-    if: ${{ github.event.inputs['auto-apply'] == 'true' }}
+    environment: dev-apply
+    if: ${{ always() }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
