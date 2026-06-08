@@ -20,16 +20,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Debug Repository Structure
-        run: |
-          pwd
-          ls -la
-          find . -type d
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ github.event.inputs['terraform-version'] }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Verify AWS Access
+        run: aws sts get-caller-identity
 
       - name: Terraform Init
         working-directory: environments/dev
