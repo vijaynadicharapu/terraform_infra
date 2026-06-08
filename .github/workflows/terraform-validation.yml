@@ -32,13 +32,13 @@ jobs:
           terraform_version: ${{ github.event.inputs['terraform-version'] }}
 
       - name: Terraform Init
-        working-directory: terraform/environments/dev
+        working-directory: terraform/terraform/environments/dev
         run: terraform init -input=false
 
       - name: Terraform Format Check
-        working-directory: terraform/environments/dev
+        working-directory: terraform/terraform/environments/dev
         run: terraform fmt -check -recursive
 
       - name: Terraform Validate
-        working-directory: terraform/environments/dev
+        working-directory: terraform/terraform/environments/dev
         run: terraform validate
