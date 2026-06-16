@@ -24,6 +24,55 @@ resource "aws_eks_cluster" "eks" {
 }
 
 #################################################
+# EKS Managed Addons
+#################################################
+
+resource "aws_eks_addon" "coredns" {
+
+cluster_name = aws_eks_cluster.eks.name
+
+addon_name = "coredns"
+
+depends_on = [
+aws_eks_cluster.eks
+]
+}
+
+resource "aws_eks_addon" "kube_proxy" {
+
+cluster_name = aws_eks_cluster.eks.name
+
+addon_name = "kube-proxy"
+
+depends_on = [
+aws_eks_cluster.eks
+]
+}
+
+resource "aws_eks_addon" "vpc_cni" {
+
+cluster_name = aws_eks_cluster.eks.name
+
+addon_name = "vpc-cni"
+
+depends_on = [
+aws_eks_cluster.eks
+]
+}
+
+resource "aws_eks_addon" "ebs_csi_driver" {
+
+cluster_name = aws_eks_cluster.eks.name
+
+addon_name = "aws-ebs-csi-driver"
+
+depends_on = [
+aws_eks_cluster.eks
+]
+}
+
+
+#################################################
 # Managed Node Group
 #################################################
 
@@ -40,9 +89,7 @@ resource "aws_eks_node_group" "nodegroup" {
 
   capacity_type = "ON_DEMAND"
 
-  instance_types = [
-    "t3.small"
-  ]
+  instance_types = var.instance_types
 
   scaling_config {
 
@@ -61,8 +108,13 @@ resource "aws_eks_node_group" "nodegroup" {
   }
 
   depends_on = [
-    aws_eks_cluster.eks
+    aws_eks_cluster.eks,
+    aws_eks_addon.coredns,
+    aws_eks_addon.kube_proxy,
+    aws_eks_addon.vpc_cni,
+    aws_eks_addon.ebs_csi_driver
   ]
+
 }
 
 #################################################
