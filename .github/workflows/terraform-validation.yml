@@ -56,6 +56,19 @@ jobs:
         working-directory: environments/dev
         run: terraform validate
 
+
+      - name: Checkov Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: environments/dev
+          framework: terraform
+
+      - name: tfsec Scan
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working-directory: environments/dev
+
+
       - name: Terraform Plan (binary)
         working-directory: environments/dev
         run: terraform plan -input=false -out=tfplan.binary
